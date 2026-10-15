@@ -10,6 +10,7 @@ import {
   HelpCircle,
   Star,
   BarChart2,
+  Video,
   User,
   Settings,
   LogOut,
@@ -55,7 +56,7 @@ export default function Navbar() {
     { label: t.nav.home, href: '/dashboard', icon: Home },
     { label: t.nav.materials, href: '/materials', icon: BookOpen },
     { label: t.nav.quiz, href: '/quiz', icon: HelpCircle },
-    { label: t.nav.expertContent, href: '/expert-content', icon: Star },
+    { label: t.nav.expertContent, href: '/expert-content', icon: Video },
     { label: t.nav.progress, href: '/progress', icon: BarChart2 },
   ];
 

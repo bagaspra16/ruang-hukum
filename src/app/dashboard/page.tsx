@@ -5,7 +5,7 @@ import Image from 'next/image';
 import {
   BookOpen,
   HelpCircle,
-  Gamepad2,
+  Video,
   Users,
   BarChart2,
   ArrowRight,
@@ -41,8 +41,7 @@ export default function DashboardPage() {
   const quickMenuItems = [
     { icon: BookOpen, label: t.quickMenu.legalMaterials, description: t.quickMenu.legalMaterialsDesc, href: '/materials' },
     { icon: HelpCircle, label: t.quickMenu.interactiveQuiz, description: t.quickMenu.interactiveQuizDesc, href: '/quiz' },
-    { icon: Gamepad2, label: t.quickMenu.miniGames, description: t.quickMenu.miniGamesDesc, href: '/quiz' },
-    { icon: Users, label: t.quickMenu.expertContent, description: t.quickMenu.expertContentDesc, href: '/expert-content' },
+    { icon: Video, label: t.quickMenu.expertContent, description: t.quickMenu.expertContentDesc, href: '/expert-content' },
     { icon: BarChart2, label: t.quickMenu.myProgress, description: t.quickMenu.myProgressDesc, href: '/progress' },
   ];
 
@@ -321,10 +320,6 @@ export default function DashboardPage() {
                 <li className="flex items-center gap-2">
                   <Check size={14} className="text-[#d4af37] shrink-0" strokeWidth={3} />
                   <span>{t.dashboard.unlockQuizzes}</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check size={14} className="text-[#d4af37] shrink-0" strokeWidth={3} />
-                  <span>{t.dashboard.unlockGames}</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check size={14} className="text-[#d4af37] shrink-0" strokeWidth={3} />

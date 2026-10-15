@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   Clock,
   HelpCircle,
-  Award,
   Settings,
   BookOpen,
   Target,
@@ -75,12 +74,6 @@ export default function ProgressPage() {
             {t.nav.quiz}
           </Link>
           <Link
-            href="/certificates"
-            className="px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap bg-white text-gray-700 border border-gray-200 shrink-0"
-          >
-            {lang === 'id' ? 'Sertifikat' : 'Certificates'}
-          </Link>
-          <Link
             href="/settings"
             className="px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap bg-white text-gray-700 border border-gray-200 shrink-0"
           >
@@ -128,21 +121,6 @@ export default function ProgressPage() {
                   <p className="text-xs font-semibold text-gray-800 group-hover:text-[#7a1c1c]">{t.nav.quiz}</p>
                   <p className="text-[10px] text-gray-400">
                     {lang === 'id' ? 'Lihat hasil kuis Anda' : 'View your quiz results'}
-                  </p>
-                </div>
-              </Link>
-
-              <Link
-                href="/certificates"
-                className="flex items-start gap-2.5 p-2.5 rounded-xl text-left hover:bg-gray-50 transition-colors group"
-              >
-                <Award size={16} className="mt-0.5 text-gray-500 group-hover:text-[#7a1c1c] shrink-0" />
-                <div>
-                  <p className="text-xs font-semibold text-gray-800 group-hover:text-[#7a1c1c]">
-                    {lang === 'id' ? 'Sertifikat' : 'Certificates'}
-                  </p>
-                  <p className="text-[10px] text-gray-400">
-                    {lang === 'id' ? 'Pencapaian belajar' : 'Your achievements'}
                   </p>
                 </div>
               </Link>
@@ -541,14 +519,11 @@ export default function ProgressPage() {
             <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-xs space-y-3.5">
               <div className="flex items-center justify-between">
                 <h3 className="font-serif font-bold text-gray-900 text-xs">
-                  {lang === 'id' ? 'Pencapaian' : 'Achievements'}
+                  {lang === 'id' ? 'Lencana Pencapaian' : 'Achievement Badges'}
                 </h3>
-                <Link
-                  href="/certificates"
-                  className="text-[11px] text-[#7a1c1c] font-semibold hover:underline"
-                >
-                  {lang === 'id' ? 'Lihat Semua >' : 'View All >'}
-                </Link>
+                <span className="text-[10px] text-gray-400 font-medium">
+                  {currentAchievements.length} {lang === 'id' ? 'Lencana' : 'Badges'}
+                </span>
               </div>
 
               <div className="space-y-2.5">

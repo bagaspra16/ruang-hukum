@@ -1,8 +1,7 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useParams, notFound } from 'next/navigation';
 import {
   ArrowLeft,
@@ -19,9 +18,10 @@ import {
   Lock,
   Download,
   FileText,
-  Play,
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
+import MaterialContent from '@/components/MaterialContent';
+import YouTubeEmbed from '@/components/YouTubeEmbed';
 import { moduleContent, getLocalizedChapters } from '@/lib/mock-data-i18n';
 import { useLanguage } from '@/lib/LanguageContext';
 
@@ -33,7 +33,6 @@ function ChapterContent() {
   const routeParams = useParams();
   const slug = (routeParams?.slug as string) || '';
   const id = (routeParams?.id as string) || '';
-  const [videoPlaying, setVideoPlaying] = useState(false);
   const { t, lang } = useLanguage();
   
   const currentModule = moduleContent[lang].find((m) => m.slug === slug);
@@ -230,44 +229,12 @@ function ChapterContent() {
                     </div>
                   </div>
                   
-                  <div className="text-gray-700 text-sm leading-relaxed space-y-3 font-sans">
-                    {chapter.content_body.split('\n\n').map((para, i) => (
-                      <p key={i}>{para}</p>
-                    ))}
-                  </div>
+                  <MaterialContent body={chapter.content_body} />
                 </div>
 
-                {/* Video Player (Aspect Video with Overlay Controls) */}
+                {/* Video Player — real YouTube embed from chapter.video_url */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-xs overflow-hidden">
-                  <div className="relative bg-gray-950 aspect-video flex items-center justify-center">
-                    <Image
-                      src="https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=1000&q=70"
-                      alt="Chapter video"
-                      fill
-                      sizes="(max-width: 1024px) 100vw, 800px"
-                      className="object-cover opacity-60"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none" />
-
-                    <button
-                      id="play-video-btn"
-                      onClick={() => setVideoPlaying(!videoPlaying)}
-                      className="relative z-10 w-16 h-16 bg-white/95 hover:bg-white rounded-full flex items-center justify-center shadow-2xl transition-transform hover:scale-110 cursor-pointer"
-                    >
-                      <Play size={24} className="text-[#7a1c1c] ml-1 fill-[#7a1c1c]" />
-                    </button>
-
-                    {/* Video controls bottom bar */}
-                    <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-xs px-4 py-2.5 flex items-center gap-3 text-white text-xs z-10">
-                      <Play size={13} className="fill-white cursor-pointer" />
-                      <span className="text-[11px] font-mono">0:00 / 12:45</span>
-                      <div className="flex-1 h-1 bg-white/25 rounded-full overflow-hidden">
-                        <div className="h-full w-0 bg-[#d4af37] rounded-full" />
-                      </div>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/20 font-semibold">CC</span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/20 font-semibold">HD</span>
-                    </div>
-                  </div>
+                  <YouTubeEmbed url={chapter.video_url} title={chapter.title} />
                 </div>
               </div>
 
