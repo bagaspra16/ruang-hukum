@@ -50,15 +50,21 @@ function parseBlocks(body: string) {
     | { type: 'ordered'; items: OrderItem[] }
   > = [];
 
-  for (const raw of lines) {
+  let i = 0;
+  while (i < lines.length) {
+    const raw = lines[i];
     const line = raw.trimEnd();
     const trimmed = line.trim();
 
-    if (!trimmed) continue;
+    if (!trimmed) {
+      i++;
+      continue;
+    }
 
     // Horizontal rule
     if (/^(-{3,}|_{3,})$/.test(trimmed)) {
       blocks.push({ type: 'divider' });
+      i++;
       continue;
     }
 
@@ -66,13 +72,14 @@ function parseBlocks(body: string) {
     const heading = trimmed.match(/^(#{2,6})\s+(.*)$/);
     if (heading) {
       blocks.push({ type: 'heading', level: heading[1].length, text: heading[2].trim() });
+      i++;
       continue;
     }
 
-    // Blockquote (gethers consecutive "> " lines)
+    // Blockquote (consumes consecutive "> " lines)
     if (trimmed.startsWith('>')) {
       const quoteLines = [trimmed.replace(/^>\s?/, '')];
-      let i = lines.indexOf(raw) + 1;
+      i++;
       while (i < lines.length && lines[i].trim().startsWith('>')) {
         quoteLines.push(lines[i].trim().replace(/^>\s?/, ''));
         i++;
@@ -81,12 +88,10 @@ function parseBlocks(body: string) {
       continue;
     }
 
-    // Bullet list (supports nesting via indentation)
+    // Bullet list (supports nesting via indentation; consumes consecutive lines)
     const bullet = line.match(/^(\s*)-\s+(.*)$/);
     if (bullet) {
-      const depth = Math.min(Math.floor(bullet[1].length / 2), 1);
-      const items: Bullet[] = [{ depth, text: bullet[2].trim() }];
-      let i = lines.indexOf(raw) + 1;
+      const items: Bullet[] = [];
       while (i < lines.length) {
         const m2 = lines[i].match(/^(\s*)-\s+(.+)$/);
         if (!m2) break;
@@ -97,11 +102,10 @@ function parseBlocks(body: string) {
       continue;
     }
 
-    // Ordered list "1. ..." (glues consecutive numbered lines)
+    // Ordered list "1. ..." (consumes consecutive numbered lines)
     const ordered = trimmed.match(/^(\d+)\.\s+(.*)$/);
     if (ordered) {
-      const items: OrderItem[] = [{ num: ordered[1], text: ordered[2].trim() }];
-      let i = lines.indexOf(raw) + 1;
+      const items: OrderItem[] = [];
       while (i < lines.length) {
         const m2 = lines[i].trim().match(/^(\d+)\.\s+(.+)$/);
         if (!m2) break;
@@ -114,6 +118,7 @@ function parseBlocks(body: string) {
 
     // Plain paragraph
     blocks.push({ type: 'paragraph', text: trimmed });
+    i++;
   }
 
   return blocks;

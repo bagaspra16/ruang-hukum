@@ -134,17 +134,18 @@ function ModuleContent() {
                 className="absolute inset-0 opacity-20 bg-cover bg-right"
                 style={{ backgroundImage: `url('${moduleImages[slug] || moduleImages['legal-science']}')` }}
               />
-              <div className="relative z-10 p-6 flex items-center gap-5">
-                <div className="w-16 h-16 rounded-full border-2 border-white/30 bg-white/10 flex items-center justify-center shrink-0">
-                  <IconComponent size={28} className="text-white" />
+              <div className="relative z-10 p-4 sm:p-6 flex items-center gap-3 sm:gap-5">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 border-white/30 bg-white/10 flex items-center justify-center shrink-0">
+                  <IconComponent size={24} className="text-white sm:hidden" />
+                  <IconComponent size={28} className="text-white hidden sm:block" />
                 </div>
-                <div>
+                <div className="min-w-0 flex-1">
                   <p className="text-[#d4af37] text-xs font-semibold tracking-widest uppercase mb-1">
                     {lang === 'id' ? 'MATERI HUKUM' : 'LEGAL MATERIALS'}
                   </p>
-                  <h1 className="text-white font-serif font-bold text-2xl md:text-3xl mb-2">{currentModule.title}</h1>
+                  <h1 className="text-white font-serif font-bold text-xl sm:text-2xl md:text-3xl mb-2">{currentModule.title}</h1>
                   <p className="text-white/70 text-sm max-w-xl">{currentModule.description}</p>
-                  <div className="flex items-center gap-5 mt-3">
+                  <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-3">
                     <div className="flex items-center gap-1.5 text-white/70 text-xs">
                       <BookMarked size={13} />
                       <span>{currentModule.total_chapters} {t.chapter.chapters}</span>
@@ -159,14 +160,14 @@ function ModuleContent() {
             </div>
 
             {/* Chapters Section */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
               {/* Chapter header with progress */}
-              <div className="flex items-center justify-between mb-5">
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
                 <h2 className="font-serif font-bold text-xl text-gray-900">{t.chapter.chapters}</h2>
                 <div className="flex items-center gap-3">
                   <span className="text-gray-400 text-sm">{t.quiz.yourProgress}</span>
                   <div className="flex items-center gap-2">
-                    <div className="w-24 h-2 bg-gray-100 rounded-full">
+                    <div className="w-20 sm:w-24 h-2 bg-gray-100 rounded-full">
                       <div
                         className="h-full bg-[#7a1c1c] rounded-full transition-all"
                         style={{ width: `${progressPercent}%` }}
@@ -186,8 +187,9 @@ function ModuleContent() {
                   return (
                     <div
                       key={chapter.id}
-                      className="flex items-center justify-between gap-4 p-4 border border-gray-100 rounded-xl hover:border-[#7a1c1c]/20 hover:bg-[#7a1c1c]/5 transition-all"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 border border-gray-100 rounded-xl hover:border-[#7a1c1c]/20 hover:bg-[#7a1c1c]/5 transition-all"
                     >
+                      {/* Top row on mobile: number + info + status */}
                       {/* Chapter number */}
                       <div
                         className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 font-bold text-sm ${
@@ -210,7 +212,7 @@ function ModuleContent() {
                       </div>
 
                       {/* Duration */}
-                      <div className="flex items-center gap-1.5 text-gray-400 text-xs shrink-0">
+                      <div className="flex items-center gap-1.5 text-gray-400 text-xs shrink-0 hidden md:flex">
                         <BookMarked size={12} />
                         <span>{chapter.duration}</span>
                       </div>
