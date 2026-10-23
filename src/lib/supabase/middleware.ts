@@ -39,6 +39,11 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
+  // API routes and auth handlers handle their own auth/responses and should never be 307 redirected to /
+  if (pathname.startsWith('/api') || pathname.startsWith('/auth')) {
+    return supabaseResponse
+  }
+
   // Public routes that don't require authentication
   const publicRoutes = ['/', '/register', '/forgot-password']
   const isPublicRoute = publicRoutes.includes(pathname)

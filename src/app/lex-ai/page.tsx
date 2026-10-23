@@ -462,7 +462,12 @@ export default function LexAIPage() {
       });
 
       if (!response.ok) {
-        throw new Error('API error');
+        const errorJson = await response.json().catch(() => null);
+        console.error('Lex AI API error response:', errorJson);
+        const errMsg = errorJson?.error === 'Groq API key not configured'
+          ? (lang === 'id' ? 'Kunci Groq API belum dikonfigurasi di server.' : 'Groq API key is not configured on server.')
+          : t.errorMsg;
+        throw new Error(errMsg);
       }
 
       const reader = response.body?.getReader();
@@ -496,6 +501,10 @@ export default function LexAIPage() {
         }
       }
 
+      if (!accumulated.trim()) {
+        throw new Error(t.errorMsg);
+      }
+
       // Finalize message
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -507,10 +516,11 @@ export default function LexAIPage() {
       setStreamingContent('');
     } catch (error: unknown) {
       if (error instanceof Error && error.name === 'AbortError') return;
+      const messageText = error instanceof Error && error.message ? error.message : t.errorMsg;
       const errMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: t.errorMsg,
+        content: messageText,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errMessage]);

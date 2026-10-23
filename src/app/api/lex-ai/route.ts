@@ -170,6 +170,14 @@ Setiap jawaban yang memberikan penjelasan hukum untuk kasus nyata HARUS menyerta
 > ⚠️ **Catatan Penting**: Informasi ini bersifat edukasi hukum umum dan bukan nasihat hukum profesional. Untuk kasus hukum spesifik yang memerlukan tindakan nyata, konsultasikan dengan advokat atau konsultan hukum berlisensi yang terdaftar di PERADI atau KAI.`;
 
 
+const CANDIDATE_MODELS = [
+  process.env.GROQ_MODEL,
+  'qwen/qwen3.8-27b',
+  'openai/gpt-oss-120b',
+  'openai/gpt-oss-20b',
+  'llama-3.3-70b-versatile',
+].filter(Boolean) as string[];
+
 export async function POST(req: NextRequest) {
   try {
     const { messages } = await req.json();
@@ -183,29 +191,46 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Groq API key not configured' }, { status: 500 });
     }
 
-    const response = await fetch(GROQ_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          ...messages,
-        ],
-        temperature: 0.3, // Lower temp = more factual, accurate legal responses
-        max_tokens: 4096, // Allow complete structured legal answers
-        stream: true,
-        top_p: 0.9,
-      }),
-    });
+    let response: Response | null = null;
+    let lastError = '';
 
-    if (!response.ok) {
-      const err = await response.text();
-      console.error('Groq API error:', err);
-      return NextResponse.json({ error: 'AI service error' }, { status: 502 });
+    for (const model of CANDIDATE_MODELS) {
+      try {
+        const res = await fetch(GROQ_API_URL, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model,
+            messages: [
+              { role: 'system', content: SYSTEM_PROMPT },
+              ...messages,
+            ],
+            temperature: 0.3, // Lower temp = more factual, accurate legal responses
+            max_tokens: 4096, // Allow complete structured legal answers
+            stream: true,
+            top_p: 0.9,
+          }),
+        });
+
+        if (res.ok && res.body) {
+          response = res;
+          break;
+        } else {
+          lastError = await res.text();
+          console.warn(`Groq model ${model} failed (${res.status}): ${lastError}. Trying next candidate...`);
+        }
+      } catch (err: unknown) {
+        lastError = err instanceof Error ? err.message : String(err);
+        console.warn(`Groq fetch exception with ${model}:`, err);
+      }
+    }
+
+    if (!response || !response.ok) {
+      console.error('All Groq candidate models failed. Last error:', lastError);
+      return NextResponse.json({ error: 'AI service error', details: lastError }, { status: 502 });
     }
 
     // Stream the response
