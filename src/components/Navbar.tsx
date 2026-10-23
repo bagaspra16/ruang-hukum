@@ -2,15 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Home,
   BookOpen,
   HelpCircle,
-  Star,
   BarChart2,
-  Video,
+  Scale,
   User,
   Settings,
   LogOut,
@@ -20,31 +18,59 @@ import {
   Menu,
   Languages,
 } from 'lucide-react';
-import { mockUser } from '@/lib/mock-data';
 import { useLanguage } from '@/lib/LanguageContext';
 import { Lang } from '@/lib/translations';
 import BrandLogo from './BrandLogo';
+import { logout } from '@/app/auth/actions';
+import { createClient } from '@/lib/supabase/client';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 export default function Navbar() {
   const pathname = usePathname();
-  const router = useRouter();
   const { lang, t, setLang } = useLanguage();
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
-  // Defer user-specific content to client to avoid SSR/client hydration mismatch
   const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const initials = mounted
-    ? mockUser.full_name.split(' ').map((n) => n[0]).slice(0, 2).join('')
-    : '';
-  const displayName = mounted
-    ? mockUser.full_name.split(' ').slice(0, 2).join(' ')
+  useEffect(() => {
+    setMounted(true);
+    const supabase = createClient();
+
+    // Get initial user
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+    });
+
+    // Listen to auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const fullName = user?.user_metadata?.full_name as string | undefined;
+  const email = user?.email ?? '';
+
+  const initials = mounted && fullName
+    ? fullName.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase()
+    : mounted && email
+    ? email.slice(0, 2).toUpperCase()
     : '';
 
-  const handleLogout = () => {
-    router.push('/');
+  const displayName = mounted && fullName
+    ? fullName.split(' ').slice(0, 2).join(' ')
+    : mounted && email
+    ? email.split('@')[0]
+    : '';
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    setProfileOpen(false);
+    await logout();
   };
 
   const isActive = (href: string) => {
@@ -56,7 +82,7 @@ export default function Navbar() {
     { label: t.nav.home, href: '/dashboard', icon: Home },
     { label: t.nav.materials, href: '/materials', icon: BookOpen },
     { label: t.nav.quiz, href: '/quiz', icon: HelpCircle },
-    { label: t.nav.expertContent, href: '/expert-content', icon: Video },
+    { label: t.nav.expertContent, href: '/lex-ai', icon: Scale },
     { label: t.nav.progress, href: '/progress', icon: BarChart2 },
   ];
 
@@ -98,9 +124,9 @@ export default function Navbar() {
             ))}
           </nav>
 
-          {/* Right Controls: Language + Profile */}
+          {/* Right Controls */}
           <div className="flex items-center gap-2">
-            {/* ── Language Switcher ── */}
+            {/* Language Switcher */}
             <div className="relative">
               <button
                 id="lang-switcher-btn"
@@ -147,11 +173,11 @@ export default function Navbar() {
                 onClick={() => { setProfileOpen(!profileOpen); setLangOpen(false); }}
                 className="flex items-center gap-2.5 hover:opacity-90 transition-opacity cursor-pointer"
               >
-                <div suppressHydrationWarning className="w-9 h-9 rounded-full bg-white text-gray-900 font-bold text-xs flex items-center justify-center shadow-xs">
+                <div suppressHydrationWarning className="w-9 h-9 rounded-full bg-white text-[#7a1c1c] font-bold text-xs flex items-center justify-center shadow-xs">
                   <span suppressHydrationWarning>{initials}</span>
                 </div>
                 <div className="hidden md:block text-left">
-                  <p className="text-white text-xs font-semibold leading-tight">
+                  <p className="text-white text-xs font-semibold leading-tight truncate max-w-[120px]">
                     {displayName}
                   </p>
                   <p className="text-white/60 text-[11px] flex items-center gap-1">
@@ -161,7 +187,12 @@ export default function Navbar() {
               </button>
 
               {profileOpen && (
-                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-50">
+                <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-50">
+                  {/* User info in dropdown */}
+                  <div className="px-3.5 py-2.5 border-b border-gray-100 mb-1">
+                    <p className="text-xs font-semibold text-gray-800 truncate">{displayName}</p>
+                    <p className="text-[11px] text-gray-400 truncate">{email}</p>
+                  </div>
                   <Link
                     href="/profile"
                     onClick={() => setProfileOpen(false)}
@@ -178,13 +209,20 @@ export default function Navbar() {
                     <Settings size={14} className="text-gray-500" />
                     <span>{t.nav.accountSettings}</span>
                   </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-2.5 px-3.5 py-2 text-gray-700 hover:bg-red-50 hover:text-red-600 text-xs font-medium transition-colors w-full cursor-pointer"
-                  >
-                    <LogOut size={14} className="text-gray-500" />
-                    <span>{t.nav.logOut}</span>
-                  </button>
+                  <div className="border-t border-gray-100 mt-1 pt-1">
+                    <button
+                      onClick={handleLogout}
+                      disabled={isLoggingOut}
+                      className="flex items-center gap-2.5 px-3.5 py-2 text-gray-700 hover:bg-red-50 hover:text-red-600 text-xs font-medium transition-colors w-full cursor-pointer disabled:opacity-50"
+                    >
+                      {isLoggingOut ? (
+                        <div className="w-3.5 h-3.5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                      ) : (
+                        <LogOut size={14} className="text-gray-500" />
+                      )}
+                      <span>{t.nav.logOut}</span>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -205,14 +243,12 @@ export default function Navbar() {
           <div className="lg:hidden pb-5 pt-2 border-t border-white/15 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
             {/* User Quick Info */}
             <div className="flex items-center gap-3 px-3 py-2.5 bg-black/20 rounded-xl">
-              <div suppressHydrationWarning className="w-10 h-10 rounded-full bg-white text-gray-900 font-bold text-sm flex items-center justify-center shrink-0">
+              <div suppressHydrationWarning className="w-10 h-10 rounded-full bg-white text-[#7a1c1c] font-bold text-sm flex items-center justify-center shrink-0">
                 {initials}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-white text-sm font-semibold truncate">{displayName || mockUser.full_name}</p>
-                <p className="text-amber-300 text-xs flex items-center gap-1">
-                  <Crown size={12} /> 5-Day Free Trial (4 days remaining)
-                </p>
+                <p className="text-white text-sm font-semibold truncate">{displayName}</p>
+                <p className="text-white/60 text-[11px] truncate">{email}</p>
               </div>
               {/* Mobile language switcher */}
               <div className="flex gap-1 shrink-0">
@@ -272,7 +308,8 @@ export default function Navbar() {
               </Link>
               <button
                 onClick={handleLogout}
-                className="py-2 px-3 rounded-lg bg-red-900/60 hover:bg-red-900 text-red-200 text-xs font-medium transition-colors"
+                disabled={isLoggingOut}
+                className="py-2 px-3 rounded-lg bg-red-900/60 hover:bg-red-900 text-red-200 text-xs font-medium transition-colors disabled:opacity-50"
               >
                 {t.nav.logOut}
               </button>

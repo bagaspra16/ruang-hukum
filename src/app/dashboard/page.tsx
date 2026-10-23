@@ -5,7 +5,7 @@ import Image from 'next/image';
 import {
   BookOpen,
   HelpCircle,
-  Video,
+  Scale,
   Users,
   BarChart2,
   ArrowRight,
@@ -41,7 +41,7 @@ export default function DashboardPage() {
   const quickMenuItems = [
     { icon: BookOpen, label: t.quickMenu.legalMaterials, description: t.quickMenu.legalMaterialsDesc, href: '/materials' },
     { icon: HelpCircle, label: t.quickMenu.interactiveQuiz, description: t.quickMenu.interactiveQuizDesc, href: '/quiz' },
-    { icon: Video, label: t.quickMenu.expertContent, description: t.quickMenu.expertContentDesc, href: '/expert-content' },
+    { icon: Scale, label: t.quickMenu.expertContent, description: t.quickMenu.expertContentDesc, href: '/lex-ai' },
     { icon: BarChart2, label: t.quickMenu.myProgress, description: t.quickMenu.myProgressDesc, href: '/progress' },
   ];
 

@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useTransition } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { Mail, Lock, Eye, EyeOff, Crown, Scale, Globe } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Crown, Globe, AlertCircle } from 'lucide-react';
 import { useLanguage } from '@/lib/LanguageContext';
 import BrandLogo from '@/components/BrandLogo';
+import { login } from '@/app/auth/actions';
 
 // All text in both languages
 const copy = {
@@ -25,6 +24,7 @@ const copy = {
     createAccount: 'Create an account',
     freeTrialBtn: '5-Day Free Trial',
     errorRequired: 'Please enter your email and password.',
+    errorInvalid: 'Invalid email or password. Please try again.',
   },
   id: {
     tagline: 'Pelajari Hukum. Pahami Lebih Jauh.',
@@ -41,47 +41,42 @@ const copy = {
     createAccount: 'Buat akun baru',
     freeTrialBtn: 'Uji Coba Gratis 5 Hari',
     errorRequired: 'Silakan masukkan email dan kata sandi Anda.',
+    errorInvalid: 'Email atau kata sandi salah. Silakan coba lagi.',
   },
 };
 
 export default function LoginPage() {
-  const router = useRouter();
   const { lang, setLang } = useLanguage();
 
-  // Prevent SSR mismatch: use the same default ('id') during server render,
-  // then switch to the actual lang after mount. This ensures server HTML === initial client HTML.
+  // Prevent SSR mismatch
   const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => { setMounted(true); }, []);
 
   const t = mounted ? copy[lang] : copy['id'];
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isPending, startTransition] = useTransition();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
 
-    // Simulate login delay
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
 
-    // For prototype: any credentials work
-    if (email && password) {
-      router.push('/dashboard');
-    } else {
+    if (!email || !password) {
       setError(t.errorRequired);
-      setLoading(false);
+      return;
     }
-  };
 
-  const handleFreeTrial = () => {
-    router.push('/dashboard');
+    startTransition(async () => {
+      const result = await login(formData);
+      if (result?.error) {
+        setError(t.errorInvalid);
+      }
+    });
   };
 
   return (
@@ -92,25 +87,19 @@ export default function LoginPage() {
       }}
       suppressHydrationWarning
     >
-      {/* Background Courtroom & Architectural Elements */}
-      {/* suppressHydrationWarning on these divs prevents noise from browser extensions
-          like Grammarly or Bitdefender that inject bis_skin_checked attributes */}
+      {/* Background Overlay */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden" suppressHydrationWarning>
-        {/* Subtle photo overlay */}
         <div
           className="absolute inset-0 bg-cover bg-center mix-blend-overlay opacity-35"
-          style={{
-            backgroundImage: `url('/wallpapers/wallpaper-4.jpg')`,
-          }}
+          style={{ backgroundImage: `url('/wallpapers/wallpaper-4.jpg')` }}
           suppressHydrationWarning
         />
-        {/* Neoclassical pillars / ambient glow */}
         <div className="absolute right-0 top-0 bottom-0 w-1/2 opacity-20 bg-gradient-to-l from-black/60 to-transparent" suppressHydrationWarning />
         <div className="absolute -left-20 -bottom-20 w-96 h-96 bg-[#d4af37]/10 rounded-full blur-3xl" suppressHydrationWarning />
         <div className="absolute right-20 top-20 w-80 h-80 bg-[#7a1c1c]/30 rounded-full blur-3xl" suppressHydrationWarning />
       </div>
 
-      {/* Language Switcher Button (Top Right) — only rendered after mount to avoid mismatch */}
+      {/* Language Switcher */}
       {mounted && (
         <div className="absolute top-6 right-6 z-20">
           <button
@@ -124,15 +113,12 @@ export default function LoginPage() {
         </div>
       )}
 
-      {/* Left Side - Brand & Tagline */}
+      {/* Left Side — Brand */}
       <div className="relative z-10 hidden lg:flex flex-col justify-between max-w-lg h-full py-6">
         <div>
-          {/* Logo Emblem — Pillars + Yellowish-Gold Serif Text */}
           <div className="mb-10">
             <BrandLogo variant="stacked" size="lg" href={null} />
           </div>
-
-          {/* Headings */}
           <div className="space-y-3">
             <h1 className="text-white font-cinzel font-bold text-4xl xl:text-5xl tracking-wide leading-tight">
               RUANG HUKUM
@@ -145,14 +131,12 @@ export default function LoginPage() {
             </p>
           </div>
         </div>
-
-        {/* Bottom subtle copyright */}
         <div className="pt-20">
           <p className="text-white/40 text-xs">© 2025 Ruang Hukum. All rights reserved.</p>
         </div>
       </div>
 
-      {/* Right Side - Floating Modal Card */}
+      {/* Right Side — Login Card */}
       <div className="relative z-10 w-full max-w-[420px] bg-white rounded-3xl shadow-2xl p-8 border border-white/20" suppressHydrationWarning>
         {/* Mobile Logo */}
         <div className="mb-6 lg:hidden">
@@ -169,9 +153,11 @@ export default function LoginPage() {
           </p>
         </div>
 
+        {/* Error message */}
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-xs">
-            {error}
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-xs flex items-start gap-2">
+            <AlertCircle size={14} className="mt-0.5 shrink-0" />
+            <span>{error}</span>
           </div>
         )}
 
@@ -183,12 +169,12 @@ export default function LoginPage() {
             </div>
             <input
               id="email-input"
+              name="email"
               type="email"
               placeholder={t.emailPlaceholder}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
               className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-gray-800 placeholder:text-gray-400 text-sm focus:outline-none focus:border-[#7a1c1c] focus:ring-2 focus:ring-[#7a1c1c]/10 transition-all bg-gray-50/50 focus:bg-white"
               required
+              autoComplete="email"
             />
           </div>
 
@@ -199,12 +185,12 @@ export default function LoginPage() {
             </div>
             <input
               id="password-input"
+              name="password"
               type={showPassword ? 'text' : 'password'}
               placeholder={t.passwordPlaceholder}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
               className="w-full pl-10 pr-11 py-3 border border-gray-200 rounded-xl text-gray-800 placeholder:text-gray-400 text-sm focus:outline-none focus:border-[#7a1c1c] focus:ring-2 focus:ring-[#7a1c1c]/10 transition-all bg-gray-50/50 focus:bg-white"
               required
+              autoComplete="current-password"
             />
             <button
               type="button"
@@ -229,10 +215,10 @@ export default function LoginPage() {
           <button
             id="login-btn"
             type="submit"
-            disabled={loading}
+            disabled={isPending}
             className="w-full bg-[#7a1c1c] hover:bg-[#631414] active:bg-[#520f0f] text-white font-semibold py-3 rounded-xl transition-all shadow-md text-xs tracking-wider uppercase disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
           >
-            {loading ? (
+            {isPending ? (
               <>
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 {t.loggingIn}
@@ -261,14 +247,14 @@ export default function LoginPage() {
         </Link>
 
         {/* Free trial button */}
-        <button
+        <Link
+          href="/register"
           id="free-trial-btn"
-          onClick={handleFreeTrial}
           className="mt-3 w-full bg-[#faeccb] hover:bg-[#f5e2b8] text-[#8a5d1b] font-semibold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 text-xs shadow-xs cursor-pointer"
         >
           <Crown size={15} className="text-[#c5932b] fill-[#c5932b]" />
           {t.freeTrialBtn}
-        </button>
+        </Link>
       </div>
     </div>
   );

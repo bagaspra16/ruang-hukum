@@ -89,3 +89,20 @@ body {
     radial-gradient(circle at 20% 50%, rgba(212, 175, 55, 0.08) 0%, transparent 50%),
     radial-gradient(circle at 80% 20%, rgba(107, 20, 20, 0.6) 0%, transparent 50%);
 }
+
+/* Lex AI — cursor blink */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Lex AI — dot bounce for typing indicator */
+@keyframes bounce-dot {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-6px); }
+}
+
+/* Border left 3px utility (for blockquote in Lex AI) */
+.border-l-3 {
+  border-left-width: 3px;
+}
