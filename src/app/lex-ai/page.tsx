@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import Navbar from '@/components/Navbar';
 import {
   Send,
@@ -185,130 +187,122 @@ const suggestedPrompts: SuggestedPrompt[] = [
 ];
 
 
-// ─── Markdown-like Renderer ───────────────────────────────────────────────────
+// ─── Markdown Renderer ────────────────────────────────────────────────────────
 
-function renderMarkdown(text: string): React.ReactNode {
-  const lines = text.split('\n');
-  const elements: React.ReactNode[] = [];
-  let i = 0;
-
-  while (i < lines.length) {
-    const line = lines[i];
-
-    // H1
-    if (line.startsWith('# ')) {
-      elements.push(
-        <h1 key={i} className="text-xl font-bold font-serif text-[#3e0b0b] mt-4 mb-2 border-b border-[#7a1c1c]/20 pb-1">
-          {processInline(line.slice(2))}
-        </h1>
-      );
-    }
-    // H2
-    else if (line.startsWith('## ')) {
-      elements.push(
-        <h2 key={i} className="text-base font-bold font-serif text-[#3e0b0b] mt-3 mb-1.5">
-          {processInline(line.slice(3))}
-        </h2>
-      );
-    }
-    // H3
-    else if (line.startsWith('### ')) {
-      elements.push(
-        <h3 key={i} className="text-sm font-bold text-gray-800 mt-2 mb-1">
-          {processInline(line.slice(4))}
-        </h3>
-      );
-    }
-    // Unordered list
-    else if (line.match(/^[-*•]\s/)) {
-      const listItems: string[] = [];
-      while (i < lines.length && lines[i].match(/^[-*•]\s/)) {
-        listItems.push(lines[i].replace(/^[-*•]\s/, ''));
-        i++;
-      }
-      elements.push(
-        <ul key={`ul-${i}`} className="my-2 space-y-1">
-          {listItems.map((item, j) => (
-            <li key={j} className="flex items-start gap-2 text-sm text-gray-700">
-              <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#7a1c1c] shrink-0" />
-              <span>{processInline(item)}</span>
+function MarkdownRenderer({ content }: { content: string }) {
+  return (
+    <div className="markdown-content">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          h1: ({ children }) => (
+            <h1 className="text-base sm:text-lg font-serif font-bold text-[#3e0b0b] mt-4 mb-2 pb-1.5 border-b border-[#7a1c1c]/20 flex items-center gap-2">
+              <span className="w-1.5 h-4.5 bg-[#7a1c1c] rounded-full inline-block shrink-0" />
+              <span>{children}</span>
+            </h1>
+          ),
+          h2: ({ children }) => (
+            <h2 className="text-sm sm:text-base font-serif font-bold text-[#641414] mt-3.5 mb-1.5 pb-1 border-b border-gray-100 flex items-center gap-1.5">
+              <span className="text-[#d4af37] text-xs">§</span>
+              <span>{children}</span>
+            </h2>
+          ),
+          h3: ({ children }) => (
+            <h3 className="text-xs sm:text-sm font-bold text-[#7a1c1c] mt-3 mb-1.5 flex items-center gap-1.5">
+              <span className="text-[#d4af37] text-xs">⚖</span>
+              <span>{children}</span>
+            </h3>
+          ),
+          h4: ({ children }) => (
+            <h4 className="text-xs font-bold text-gray-900 mt-2 mb-1">
+              {children}
+            </h4>
+          ),
+          p: ({ children }) => (
+            <p className="text-xs sm:text-sm text-gray-800 leading-relaxed mb-2.5 last:mb-0">
+              {children}
+            </p>
+          ),
+          strong: ({ children }) => (
+            <strong className="font-bold text-gray-950 bg-amber-500/10 px-1 py-0.5 rounded text-[12px] sm:text-[13px] border border-amber-500/20 inline-block my-0.5">
+              {children}
+            </strong>
+          ),
+          em: ({ children }) => (
+            <em className="italic text-gray-700">{children}</em>
+          ),
+          ul: ({ children }) => (
+            <ul className="space-y-1.5 my-2.5 pl-1 text-xs sm:text-sm text-gray-800">
+              {children}
+            </ul>
+          ),
+          ol: ({ children }) => (
+            <ol className="space-y-2 my-2.5 pl-1 list-decimal list-inside text-xs sm:text-sm text-gray-800 font-medium">
+              {children}
+            </ol>
+          ),
+          li: ({ children }) => (
+            <li className="flex items-start gap-2 leading-relaxed text-gray-800 text-xs sm:text-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#7a1c1c] mt-1.5 shrink-0" />
+              <span className="flex-1">{children}</span>
             </li>
-          ))}
-        </ul>
-      );
-      continue;
-    }
-    // Ordered list
-    else if (line.match(/^\d+\.\s/)) {
-      const listItems: { num: string; text: string }[] = [];
-      while (i < lines.length && lines[i].match(/^\d+\.\s/)) {
-        const match = lines[i].match(/^(\d+)\.\s(.+)/);
-        if (match) listItems.push({ num: match[1], text: match[2] });
-        i++;
-      }
-      elements.push(
-        <ol key={`ol-${i}`} className="my-2 space-y-1.5">
-          {listItems.map((item, j) => (
-            <li key={j} className="flex items-start gap-2.5 text-sm text-gray-700">
-              <span className="shrink-0 w-5 h-5 rounded-full bg-[#7a1c1c] text-white text-[10px] font-bold flex items-center justify-center mt-0.5">
-                {item.num}
-              </span>
-              <span>{processInline(item.text)}</span>
-            </li>
-          ))}
-        </ol>
-      );
-      continue;
-    }
-    // Blockquote
-    else if (line.startsWith('> ')) {
-      elements.push(
-        <blockquote key={i} className="border-l-3 border-[#7a1c1c] pl-3 my-2 text-sm text-gray-600 italic bg-[#7a1c1c]/5 py-1 rounded-r-lg">
-          {processInline(line.slice(2))}
-        </blockquote>
-      );
-    }
-    // Horizontal rule
-    else if (line.match(/^---+$/)) {
-      elements.push(<hr key={i} className="my-3 border-gray-200" />);
-    }
-    // Empty line
-    else if (line.trim() === '') {
-      elements.push(<div key={i} className="h-1" />);
-    }
-    // Normal paragraph
-    else {
-      elements.push(
-        <p key={i} className="text-sm text-gray-700 leading-relaxed">
-          {processInline(line)}
-        </p>
-      );
-    }
-    i++;
-  }
-
-  return <div className="space-y-0.5">{elements}</div>;
-}
-
-function processInline(text: string): React.ReactNode {
-  // Bold **text**
-  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/);
-  return parts.map((part, i) => {
-    if (part.startsWith('**') && part.endsWith('**')) {
-      return <strong key={i} className="font-semibold text-gray-900">{part.slice(2, -2)}</strong>;
-    }
-    if (part.startsWith('*') && part.endsWith('*')) {
-      return <em key={i} className="italic">{part.slice(1, -1)}</em>;
-    }
-    if (part.startsWith('`') && part.endsWith('`')) {
-      return (
-        <code key={i} className="bg-[#7a1c1c]/10 text-[#7a1c1c] text-xs px-1.5 py-0.5 rounded font-mono">
-          {part.slice(1, -1)}
-        </code>
-      );
-    }
-    return part;
-  });
+          ),
+          blockquote: ({ children }) => (
+            <blockquote className="my-3 border-l-4 border-[#7a1c1c] bg-[#7a1c1c]/5 rounded-r-xl px-3.5 py-2.5 text-xs sm:text-sm text-gray-700 italic shadow-2xs">
+              {children}
+            </blockquote>
+          ),
+          table: ({ children }) => (
+            <div className="overflow-x-auto my-3 rounded-xl border border-gray-200 shadow-2xs">
+              <table className="w-full text-left text-xs border-collapse">
+                {children}
+              </table>
+            </div>
+          ),
+          thead: ({ children }) => (
+            <thead className="bg-[#7a1c1c] text-white text-[11px] font-semibold uppercase tracking-wider">
+              {children}
+            </thead>
+          ),
+          tbody: ({ children }) => (
+            <tbody className="divide-y divide-gray-100 bg-white">
+              {children}
+            </tbody>
+          ),
+          tr: ({ children }) => (
+            <tr className="hover:bg-[#7a1c1c]/5 transition-colors">
+              {children}
+            </tr>
+          ),
+          th: ({ children }) => (
+            <th className="px-3 py-2 font-semibold text-white whitespace-nowrap">
+              {children}
+            </th>
+          ),
+          td: ({ children }) => (
+            <td className="px-3 py-2 text-gray-700 align-top">
+              {children}
+            </td>
+          ),
+          code: ({ children, className }) => {
+            const isInline = !className;
+            return isInline ? (
+              <code className="bg-[#7a1c1c]/10 text-[#7a1c1c] text-xs px-1.5 py-0.5 rounded font-mono font-medium">
+                {children}
+              </code>
+            ) : (
+              <pre className="bg-gray-900 text-gray-100 p-3 rounded-xl overflow-x-auto text-xs my-2.5 font-mono">
+                <code>{children}</code>
+              </pre>
+            );
+          },
+          hr: () => <hr className="my-3.5 border-gray-200" />,
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
+  );
 }
 
 // ─── Chat Bubble ──────────────────────────────────────────────────────────────
@@ -326,37 +320,41 @@ function ChatBubble({ message, onCopy }: { message: Message; onCopy: (text: stri
   return (
     <div className={`flex gap-3 group ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
       {/* Avatar */}
-      <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center shadow-sm ${
-        isUser ? 'bg-[#7a1c1c] text-white' : 'bg-gradient-to-br from-[#d4af37] to-[#b8941e] text-white'
+      <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center shadow-xs mt-0.5 ${
+        isUser
+          ? 'bg-[#7a1c1c] text-white'
+          : 'bg-gradient-to-br from-[#7a1c1c] via-[#8c2222] to-[#5a1414] text-[#d4af37] border border-[#d4af37]/30'
       }`}>
         {isUser ? <User size={14} /> : <Scale size={14} />}
       </div>
 
       {/* Bubble */}
-      <div className={`max-w-[80%] relative ${isUser ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
-        <div className={`px-4 py-3 rounded-2xl shadow-xs ${
+      <div className={`max-w-[85%] sm:max-w-[88%] lg:max-w-[92%] relative ${isUser ? 'items-end' : 'items-start'} flex flex-col gap-1 min-w-0`}>
+        <div className={`px-4 sm:px-5 py-3.5 rounded-2xl shadow-xs overflow-hidden ${
           isUser
-            ? 'bg-[#7a1c1c] text-white rounded-tr-sm'
-            : 'bg-white border border-gray-100 rounded-tl-sm'
+            ? 'bg-[#7a1c1c] text-white rounded-tr-xs'
+            : 'bg-white border border-gray-100/90 text-gray-800 rounded-tl-xs'
         }`}>
           {isUser ? (
-            <p className="text-sm leading-relaxed text-white">{message.content}</p>
+            <p className="text-sm leading-relaxed text-white whitespace-pre-wrap">{message.content}</p>
           ) : (
-            <div className="prose-sm">{renderMarkdown(message.content)}</div>
+            <div className="text-sm">
+              <MarkdownRenderer content={message.content} />
+            </div>
           )}
         </div>
 
         {/* Actions */}
-        <div className={`flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ${isUser ? 'flex-row-reverse' : ''}`}>
+        <div className={`flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity ${isUser ? 'flex-row-reverse' : ''}`}>
           <span className="text-[10px] text-gray-400">
             {message.timestamp.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
           </span>
           {!isUser && (
             <button
               onClick={handleCopy}
-              className="flex items-center gap-1 text-[10px] text-gray-400 hover:text-[#7a1c1c] transition-colors px-1.5 py-0.5 rounded hover:bg-gray-100"
+              className="flex items-center gap-1 text-[10px] text-gray-400 hover:text-[#7a1c1c] transition-colors px-1.5 py-0.5 rounded hover:bg-gray-100 cursor-pointer"
             >
-              {copied ? <Check size={10} /> : <Copy size={10} />}
+              {copied ? <Check size={11} className="text-emerald-600" /> : <Copy size={11} />}
               <span>{copied ? 'Disalin' : 'Salin'}</span>
             </button>
           )}
@@ -569,11 +567,11 @@ export default function LexAIPage() {
   const showWelcome = messages.length === 0 && !isLoading;
 
   return (
-    <div className="min-h-screen bg-[#f9f5ef] flex flex-col">
+    <div className="h-screen max-h-[100dvh] bg-[#f9f5ef] flex flex-col overflow-hidden">
       <Navbar />
 
       {/* Page Shell */}
-      <div className="flex-1 flex overflow-hidden" style={{ height: 'calc(100vh - 64px)' }}>
+      <div className="flex-1 flex overflow-hidden min-h-0">
 
         {/* ── Left Sidebar ── */}
         <aside className={`
@@ -766,12 +764,14 @@ export default function LexAIPage() {
             {streamingContent && (
               <div className="max-w-3xl mx-auto w-full animate-fadeIn">
                 <div className="flex gap-3">
-                  <div className="shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-[#d4af37] to-[#b8941e] text-white flex items-center justify-center shadow-sm">
+                  <div className="shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-[#7a1c1c] via-[#8c2222] to-[#5a1414] text-[#d4af37] border border-[#d4af37]/30 flex items-center justify-center shadow-xs mt-0.5">
                     <Scale size={14} />
                   </div>
-                  <div className="max-w-[80%] bg-white border border-gray-100 rounded-2xl rounded-tl-sm px-4 py-3 shadow-xs">
-                    <div className="prose-sm">{renderMarkdown(streamingContent)}</div>
-                    <span className="inline-block w-0.5 h-4 bg-[#7a1c1c] animate-pulse ml-0.5 align-text-bottom" />
+                  <div className="max-w-[85%] sm:max-w-[88%] lg:max-w-[92%] bg-white border border-gray-100/90 text-gray-800 rounded-2xl rounded-tl-xs px-4 sm:px-5 py-3.5 shadow-xs">
+                    <div className="text-sm">
+                      <MarkdownRenderer content={streamingContent} />
+                    </div>
+                    <span className="inline-block w-1.5 h-4 bg-[#7a1c1c] animate-pulse ml-0.5 align-middle rounded-full" />
                   </div>
                 </div>
               </div>
@@ -787,57 +787,40 @@ export default function LexAIPage() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* ── Input Area ── */}
-          <div className="bg-white border-t border-gray-100 px-4 sm:px-6 py-4 shrink-0">
+          {/* ── Static Input Area ── */}
+          <div className="bg-white/95 backdrop-blur-md border-t border-gray-200/80 px-4 sm:px-6 py-3 shrink-0 z-20 shadow-[0_-4px_12px_rgba(0,0,0,0.03)]">
             <div className="max-w-3xl mx-auto">
-              {/* Quick prompts row (after chat started) */}
-              {messages.length > 0 && messages.length < 3 && (
-                <div className="flex gap-2 mb-3 overflow-x-auto pb-1 no-scrollbar">
-                  {suggestedPrompts.slice(0, 4).map((p, i) => (
-                    <button
-                      key={i}
-                      onClick={() => handleSend(p.prompt)}
-                      className="shrink-0 px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-600 text-xs rounded-full hover:border-[#7a1c1c]/30 hover:text-[#7a1c1c] transition-all"
-                    >
-                      {p.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              <div className="flex gap-3 items-end">
-                <div className="flex-1 relative">
-                  <textarea
-                    ref={inputRef}
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder={t.placeholder}
-                    rows={1}
-                    className="w-full resize-none border border-gray-200 rounded-2xl px-4 py-3 pr-12 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-[#7a1c1c] focus:ring-2 focus:ring-[#7a1c1c]/10 transition-all bg-gray-50/50 focus:bg-white overflow-hidden leading-relaxed"
-                    style={{ maxHeight: '120px' }}
-                    disabled={isLoading}
-                  />
-                  {/* Char hint */}
-                  <span className="absolute right-3 bottom-3 text-[10px] text-gray-300">⏎</span>
-                </div>
+              <div className="relative flex items-end gap-2 bg-gray-50/90 hover:bg-gray-50 focus-within:bg-white border border-gray-200 focus-within:border-[#7a1c1c] focus-within:ring-2 focus-within:ring-[#7a1c1c]/10 rounded-2xl p-2 transition-all shadow-2xs">
+                <textarea
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={t.placeholder}
+                  rows={1}
+                  className="flex-1 resize-none bg-transparent px-3 py-2 text-xs sm:text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none leading-relaxed max-h-32 min-h-[40px]"
+                  style={{ maxHeight: '120px' }}
+                  disabled={isLoading}
+                />
 
                 <button
                   onClick={() => handleSend()}
                   disabled={!input.trim() || isLoading}
-                  className="shrink-0 w-11 h-11 rounded-2xl bg-[#7a1c1c] hover:bg-[#631414] active:bg-[#520f0f] text-white flex items-center justify-center transition-all shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                  aria-label="Send message"
+                  className="shrink-0 w-10 h-10 rounded-xl bg-[#7a1c1c] hover:bg-[#631414] active:bg-[#520f0f] text-white flex items-center justify-center transition-all shadow-xs disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {isLoading ? (
-                    <RotateCcw size={16} className="animate-spin" />
+                    <RotateCcw size={16} className="animate-spin text-white" />
                   ) : (
-                    <Send size={16} />
+                    <Send size={15} className="translate-x-0.5" />
                   )}
                 </button>
               </div>
 
-              <p className="text-[10px] text-gray-400 mt-2 text-center">
-                {t.disclaimer}
-              </p>
+              <div className="flex items-center justify-between text-[10px] text-gray-400 mt-2 px-1">
+                <span className="truncate">{t.disclaimer}</span>
+                <span className="hidden sm:inline-block shrink-0 text-gray-300 ml-2">Tekan Enter ⏎ untuk kirim</span>
+              </div>
             </div>
           </div>
         </main>
