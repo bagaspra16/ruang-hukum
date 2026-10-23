@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 
 // ─── LOGIN ─────────────────────────────────────────────────────────────────
@@ -33,6 +34,20 @@ export async function register(formData: FormData) {
   const password = formData.get('password') as string
   const fullName = formData.get('full_name') as string
 
+  // Determine site base URL for email redirect
+  const headerList = await headers()
+  const host = headerList.get('x-forwarded-host') || headerList.get('host')
+  const proto = headerList.get('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http')
+
+  let siteUrl = 'https://ruang-hukum.vercel.app'
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    siteUrl = process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '')
+  } else if (host && !host.includes('localhost')) {
+    siteUrl = `${proto}://${host}`
+  }
+
+  const emailRedirectTo = `${siteUrl}/auth/callback?next=/dashboard`
+
   const { error } = await supabase.auth.signUp({
     email,
     password,
@@ -40,6 +55,7 @@ export async function register(formData: FormData) {
       data: {
         full_name: fullName,
       },
+      emailRedirectTo,
     },
   })
 
