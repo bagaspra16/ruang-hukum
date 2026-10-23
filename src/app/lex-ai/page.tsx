@@ -88,53 +88,102 @@ const copy = {
 const suggestedPrompts: SuggestedPrompt[] = [
   {
     icon: Briefcase,
-    label: 'Hukum Bisnis',
-    prompt: 'Apa saja syarat mendirikan PT (Perseroan Terbatas) di Indonesia dan apa saja kewajiban hukumnya?',
+    label: 'Pendirian PT',
+    prompt: 'Apa saja syarat dan prosedur mendirikan PT (Perseroan Terbatas) di Indonesia setelah UU Cipta Kerja? Sebutkan dasar hukum, modal minimum, dan kewajiban hukumnya.',
+    category: 'bisnis',
+  },
+  {
+    icon: Briefcase,
+    label: 'Kepailitan & PKPU',
+    prompt: 'Apa perbedaan antara Kepailitan dan PKPU (Penundaan Kewajiban Pembayaran Utang)? Bagaimana prosedurnya berdasarkan UU No. 37/2004?',
     category: 'bisnis',
   },
   {
     icon: Users,
-    label: 'Ketenagakerjaan',
-    prompt: 'Bagaimana aturan PHK dan pesangon berdasarkan UU Cipta Kerja? Apa hak pekerja yang di-PHK?',
+    label: 'PHK & Pesangon',
+    prompt: 'Bagaimana aturan PHK dan perhitungan pesangon berdasarkan PP No. 35/2021 (turunan UU Cipta Kerja)? Apa saja hak pekerja yang di-PHK sepihak?',
+    category: 'ketenagakerjaan',
+  },
+  {
+    icon: Users,
+    label: 'PKWT vs PKWTT',
+    prompt: 'Apa perbedaan hukum antara PKWT (kontrak) dan PKWTT (tetap)? Kapan PKWT bisa diubah menjadi PKWTT demi hukum berdasarkan PP No. 35/2021?',
     category: 'ketenagakerjaan',
   },
   {
     icon: Home,
-    label: 'Hukum Tanah',
-    prompt: 'Apa perbedaan antara Hak Milik, HGB, dan HGU? Bagaimana cara mengurus sertifikat tanah?',
+    label: 'HM, HGB & HGU',
+    prompt: 'Apa perbedaan Hak Milik, HGB, dan HGU berdasarkan UUPA No. 5/1960 dan PP No. 18/2021? Siapa yang bisa memiliki masing-masing hak tersebut?',
+    category: 'pertanahan',
+  },
+  {
+    icon: Home,
+    label: 'Sengketa Tanah',
+    prompt: 'Bagaimana prosedur penyelesaian sengketa tanah di Indonesia? Apa saja jalur yang tersedia: mediasi BPN, gugatan perdata, atau PTUN?',
     category: 'pertanahan',
   },
   {
     icon: Gavel,
-    label: 'Hukum Pidana',
-    prompt: 'Apa yang dimaksud dengan delik aduan dan delik umum dalam KUHP? Berikan contohnya.',
+    label: 'KUHP Baru 2026',
+    prompt: 'Apa saja perubahan penting dalam KUHP baru (UU No. 1/2023) yang berlaku mulai 2 Januari 2026? Apa perbedaannya dengan KUHP lama (WvS)?',
+    category: 'pidana',
+  },
+  {
+    icon: Gavel,
+    label: 'Praperadilan',
+    prompt: 'Apa yang dimaksud dengan praperadilan dalam KUHAP? Apa saja objek praperadilan dan bagaimana prosedur pengajuannya?',
     category: 'pidana',
   },
   {
     icon: FileText,
-    label: 'Hukum Kontrak',
-    prompt: 'Apa syarat sahnya kontrak menurut KUHPerdata Pasal 1320? Apa akibat hukum kontrak yang tidak sah?',
+    label: 'Syarat Sah Kontrak',
+    prompt: 'Jelaskan 4 syarat sahnya perjanjian berdasarkan Pasal 1320 KUHPerdata. Apa akibat hukum jika salah satu syarat tidak terpenuhi (batal demi hukum vs. dapat dibatalkan)?',
+    category: 'perdata',
+  },
+  {
+    icon: FileText,
+    label: 'Wanprestasi & PMH',
+    prompt: 'Apa perbedaan antara Wanprestasi (Pasal 1243 KUHPerdata) dan Perbuatan Melawan Hukum/PMH (Pasal 1365 KUHPerdata)? Bagaimana cara menuntut ganti rugi masing-masing?',
     category: 'perdata',
   },
   {
     icon: BookOpen,
     label: 'Hukum Waris',
-    prompt: 'Bagaimana sistem hukum waris di Indonesia? Apa perbedaan waris BW, hukum adat, dan hukum Islam?',
+    prompt: 'Bagaimana sistem hukum waris di Indonesia? Jelaskan perbedaan antara waris BW (KUHPerdata), waris Islam (KHI), dan waris adat beserta dasar hukumnya.',
     category: 'perdata',
   },
   {
     icon: Scale,
     label: 'Gugatan Perdata',
-    prompt: 'Bagaimana prosedur mengajukan gugatan perdata di Pengadilan Negeri? Apa saja dokumen yang diperlukan?',
+    prompt: 'Bagaimana prosedur lengkap mengajukan gugatan perdata di Pengadilan Negeri? Jelaskan dari tahap pendaftaran, mediasi wajib (PERMA No. 1/2016), persidangan, hingga putusan.',
     category: 'acara',
+  },
+  {
+    icon: Scale,
+    label: 'Judicial Review MK',
+    prompt: 'Bagaimana prosedur pengujian undang-undang (judicial review) di Mahkamah Konstitusi? Siapa yang berhak mengajukan dan apa syarat legal standing-nya?',
+    category: 'tata-negara',
+  },
+  {
+    icon: Sparkles,
+    label: 'UU ITE Revisi 2024',
+    prompt: 'Apa saja perubahan dalam UU ITE No. 1/2024 (revisi terbaru)? Bagaimana perubahan Pasal 27 tentang pencemaran nama baik dan apa sanksi pidananya?',
+    category: 'siber',
   },
   {
     icon: Sparkles,
     label: 'Perlindungan Konsumen',
-    prompt: 'Apa hak-hak konsumen berdasarkan UU Perlindungan Konsumen? Ke mana harus melapor jika hak dilanggar?',
+    prompt: 'Apa hak-hak konsumen berdasarkan UU No. 8/1999? Bagaimana mekanisme pengaduan ke BPSK dan apa bedanya dengan gugatan ke pengadilan?',
     category: 'konsumen',
   },
+  {
+    icon: BookOpen,
+    label: 'Hak Cipta & Paten',
+    prompt: 'Apa perbedaan antara Hak Cipta (UU No. 28/2014) dan Paten (UU No. 13/2016) di Indonesia? Kapan perlindungan mulai berlaku dan berapa lama masa perlindungannya?',
+    category: 'hki',
+  },
 ];
+
 
 // ─── Markdown-like Renderer ───────────────────────────────────────────────────
 
@@ -495,9 +544,13 @@ export default function LexAIPage() {
     { id: 'perdata', label: 'Perdata' },
     { id: 'pidana', label: 'Pidana' },
     { id: 'pertanahan', label: 'Pertanahan' },
-    { id: 'acara', label: 'Acara' },
+    { id: 'acara', label: 'Hukum Acara' },
+    { id: 'tata-negara', label: 'Tata Negara' },
+    { id: 'siber', label: 'Siber & ITE' },
+    { id: 'hki', label: 'HKI' },
     { id: 'konsumen', label: 'Konsumen' },
   ];
+
 
   const filteredPrompts = selectedCategory === 'all'
     ? suggestedPrompts
@@ -635,7 +688,11 @@ export default function LexAIPage() {
 
                 {/* Capability pills */}
                 <div className="flex flex-wrap justify-center gap-2 mb-8">
-                  {['Hukum Perdata', 'Hukum Pidana', 'Hukum Bisnis', 'Ketenagakerjaan', 'Hukum Tanah', 'HKI', 'Hukum Acara'].map((cap) => (
+                  {[
+                    'Hukum Perdata', 'Hukum Pidana', 'Hukum Bisnis', 'Ketenagakerjaan',
+                    'Hukum Tanah', 'HKI', 'Hukum Acara', 'Tata Negara',
+                    'Siber & ITE', 'Perpajakan', 'Perlindungan Konsumen', 'Kepailitan',
+                  ].map((cap) => (
                     <span key={cap} className="px-3 py-1 bg-white border border-gray-200 text-gray-600 text-xs rounded-full font-medium shadow-xs">
                       {cap}
                     </span>
