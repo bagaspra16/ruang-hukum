@@ -20,7 +20,8 @@ import {
   Check,
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
-import { mockUser } from '@/lib/mock-data';
+import { useUser } from '@/lib/useUser';
+import { logout } from '@/app/auth/actions';
 import { moduleContent } from '@/lib/mock-data-i18n';
 import { useLanguage } from '@/lib/LanguageContext';
 
@@ -35,7 +36,7 @@ const moduleImages = [
 
 export default function DashboardPage() {
   const { t, lang } = useLanguage();
-  const firstName = mockUser.full_name.split(' ')[0];
+  const { firstName, displayName, initials, email, university, major, learningGoal, loading } = useUser();
   const modules = moduleContent[lang] || moduleContent.en;
 
   const quickMenuItems = [
@@ -44,6 +45,7 @@ export default function DashboardPage() {
     { icon: Scale, label: t.quickMenu.expertContent, description: t.quickMenu.expertContentDesc, href: '/lex-ai' },
     { icon: BarChart2, label: t.quickMenu.myProgress, description: t.quickMenu.myProgressDesc, href: '/progress' },
   ];
+
 
   return (
     <div className="min-h-screen bg-[#f9f5ef] pb-16">
@@ -220,13 +222,13 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between pb-3 border-b border-gray-100">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-[#8c6239] text-white font-serif font-bold text-base flex items-center justify-center shadow-xs">
-                    KM
+                    {loading ? '…' : initials}
                   </div>
                   <div>
                     <h4 className="font-serif font-bold text-gray-900 text-sm leading-tight">
-                      {mockUser.full_name.split(' ').slice(0, 2).join(' ')}
+                      {loading ? '—' : displayName}
                     </h4>
-                    <p className="text-gray-400 text-xs">{mockUser.email}</p>
+                    <p className="text-gray-400 text-xs">{loading ? '' : email}</p>
                   </div>
                 </div>
 
@@ -244,21 +246,21 @@ export default function DashboardPage() {
                   <span className="flex items-center gap-2 text-gray-500 text-[11px]">
                     <Building size={13} className="text-[#7a1c1c]" /> {t.dashboard.university}
                   </span>
-                  <span className="font-semibold text-gray-900">{mockUser.university}</span>
+                  <span className="font-semibold text-gray-900">{loading ? '—' : (university || '—')}</span>
                 </div>
 
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-2 text-gray-500 text-[11px]">
                     <GraduationCap size={13} className="text-[#7a1c1c]" /> {t.dashboard.programMajor}
                   </span>
-                  <span className="font-semibold text-gray-900">{mockUser.major}</span>
+                  <span className="font-semibold text-gray-900">{loading ? '—' : (major || '—')}</span>
                 </div>
 
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-2 text-gray-500 text-[11px]">
                     <Target size={13} className="text-[#7a1c1c]" /> {t.dashboard.learningGoal}
                   </span>
-                  <span className="font-semibold text-gray-900">{mockUser.learning_goal}</span>
+                  <span className="font-semibold text-gray-900">{loading ? '—' : (learningGoal || '—')}</span>
                 </div>
 
                 <div className="flex items-center justify-between">
@@ -285,16 +287,16 @@ export default function DashboardPage() {
                   <span className="text-gray-400">&gt;</span>
                 </Link>
 
-                <Link
-                  href="/"
-                  className="flex items-center justify-between p-2 rounded-xl hover:bg-red-50 text-red-600 transition-colors"
+                <button
+                  onClick={() => logout()}
+                  className="flex items-center justify-between p-2 rounded-xl hover:bg-red-50 text-red-600 transition-colors w-full"
                 >
                   <span className="flex items-center gap-2">
                     <LogOut size={14} />
                     <span>{t.dashboard.logOut}</span>
                   </span>
                   <span className="text-red-400">&gt;</span>
-                </Link>
+                </button>
               </div>
             </div>
 

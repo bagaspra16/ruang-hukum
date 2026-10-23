@@ -17,17 +17,13 @@ import {
   Shield,
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
-import { mockUser } from '@/lib/mock-data';
+import { useUser } from '@/lib/useUser';
+import { logout } from '@/app/auth/actions';
 import { useLanguage } from '@/lib/LanguageContext';
 
 export default function ProfilePage() {
   const { lang, t } = useLanguage();
-
-  const initials = mockUser.full_name
-    .split(' ')
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join('');
+  const { displayName, initials, email, university, major, learningGoal, loading } = useUser();
 
   const text = {
     en: {
@@ -142,9 +138,9 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <h1 className="text-white font-serif font-bold text-2xl md:text-3xl leading-tight">
-                    {mockUser.full_name}
+                    {loading ? '—' : displayName}
                   </h1>
-                  <p className="text-white/80 text-sm mt-0.5">{mockUser.email}</p>
+                  <p className="text-white/80 text-sm mt-0.5">{loading ? '' : email}</p>
                 </div>
               </div>
             </div>
@@ -160,7 +156,7 @@ export default function ProfilePage() {
                     <User size={16} className="text-gray-400 mt-1 shrink-0" />
                     <div>
                       <p className="text-[11px] text-gray-400 font-medium">{text.name}</p>
-                      <p className="text-gray-900 font-semibold text-sm">{mockUser.full_name}</p>
+                      <p className="text-gray-900 font-semibold text-sm">{loading ? '—' : (displayName || '—')}</p>
                     </div>
                   </div>
 
@@ -169,7 +165,7 @@ export default function ProfilePage() {
                     <Building2 size={16} className="text-gray-400 mt-1 shrink-0" />
                     <div>
                       <p className="text-[11px] text-gray-400 font-medium">{text.programMajor}</p>
-                      <p className="text-gray-900 font-semibold text-sm">{mockUser.major}</p>
+                      <p className="text-gray-900 font-semibold text-sm">{loading ? '—' : (major || '—')}</p>
                     </div>
                   </div>
 
@@ -178,7 +174,7 @@ export default function ProfilePage() {
                     <Mail size={16} className="text-gray-400 mt-1 shrink-0" />
                     <div>
                       <p className="text-[11px] text-gray-400 font-medium">{text.email}</p>
-                      <p className="text-gray-900 font-semibold text-sm">{mockUser.email}</p>
+                      <p className="text-gray-900 font-semibold text-sm">{loading ? '—' : (email || '—')}</p>
                     </div>
                   </div>
 
@@ -187,7 +183,7 @@ export default function ProfilePage() {
                     <Target size={16} className="text-gray-400 mt-1 shrink-0" />
                     <div>
                       <p className="text-[11px] text-gray-400 font-medium">{text.learningGoal}</p>
-                      <p className="text-gray-900 font-semibold text-sm">{mockUser.learning_goal}</p>
+                      <p className="text-gray-900 font-semibold text-sm">{loading ? '—' : (learningGoal || '—')}</p>
                     </div>
                   </div>
 
@@ -196,7 +192,7 @@ export default function ProfilePage() {
                     <Building2 size={16} className="text-gray-400 mt-1 shrink-0" />
                     <div>
                       <p className="text-[11px] text-gray-400 font-medium">{text.university}</p>
-                      <p className="text-gray-900 font-semibold text-sm">{mockUser.university}</p>
+                      <p className="text-gray-900 font-semibold text-sm">{loading ? '—' : (university || '—')}</p>
                     </div>
                   </div>
 
@@ -215,10 +211,13 @@ export default function ProfilePage() {
 
                 {/* Right Action Buttons */}
                 <div className="flex flex-col gap-2.5 w-full xl:w-56 shrink-0 pt-2 xl:pt-0 border-t xl:border-t-0 border-gray-100">
-                  <button className="w-full flex items-center justify-center gap-2 bg-[#7a1c1c] hover:bg-[#6b1414] text-white font-semibold py-2.5 px-4 rounded-xl text-xs transition-colors shadow-xs cursor-pointer">
+                  <Link
+                    href="/settings"
+                    className="w-full flex items-center justify-center gap-2 bg-[#7a1c1c] hover:bg-[#6b1414] text-white font-semibold py-2.5 px-4 rounded-xl text-xs transition-colors shadow-xs cursor-pointer"
+                  >
                     <Pencil size={14} />
                     <span>{text.editProfile}</span>
-                  </button>
+                  </Link>
 
                   <Link
                     href="/settings"
@@ -228,13 +227,13 @@ export default function ProfilePage() {
                     <span>{text.accountSettings}</span>
                   </Link>
 
-                  <Link
-                    href="/"
+                  <button
+                    onClick={() => logout()}
                     className="w-full flex items-center justify-center gap-2 border border-[#7a1c1c] text-[#7a1c1c] hover:bg-red-50 font-semibold py-2.5 px-4 rounded-xl text-xs transition-colors"
                   >
                     <LogOut size={14} />
                     <span>{text.logOut}</span>
-                  </Link>
+                  </button>
                 </div>
               </div>
             </div>

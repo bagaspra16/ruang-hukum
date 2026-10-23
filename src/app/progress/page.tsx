@@ -26,6 +26,7 @@ import {
 import Navbar from '@/components/Navbar';
 import { progressContent, achievementsContent } from '@/lib/mock-data-i18n';
 import { useLanguage } from '@/lib/LanguageContext';
+import { useUser } from '@/lib/useUser';
 
 const subjectIcons: Record<string, React.ElementType> = {
   'legal-science': Scale,
@@ -38,6 +39,7 @@ const subjectIcons: Record<string, React.ElementType> = {
 
 export default function ProgressPage() {
   const { lang, t } = useLanguage();
+  const { firstName, loading } = useUser();
   const [goalEditing, setGoalEditing] = useState(false);
   const [goalText, setGoalText] = useState(
     lang === 'id'
@@ -148,7 +150,9 @@ export default function ProgressPage() {
             <div className="bg-gradient-to-r from-white via-white to-amber-50/50 rounded-2xl border border-gray-100 p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div className="space-y-1">
                 <h1 className="text-2xl md:text-3xl font-serif font-bold text-gray-900">
-                  {lang === 'id' ? 'Selamat Siang, Keisha!' : 'Good Afternoon, Keisha!'}
+                  {loading
+                    ? (lang === 'id' ? 'Selamat Datang!' : 'Welcome!')
+                    : (lang === 'id' ? `Selamat Datang, ${firstName}!` : `Welcome, ${firstName}!`)}
                 </h1>
                 <p className="text-xs md:text-sm text-gray-600">
                   {lang === 'id'

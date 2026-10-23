@@ -22,50 +22,16 @@ import { useLanguage } from '@/lib/LanguageContext';
 import { Lang } from '@/lib/translations';
 import BrandLogo from './BrandLogo';
 import { logout } from '@/app/auth/actions';
-import { createClient } from '@/lib/supabase/client';
-import type { User as SupabaseUser } from '@supabase/supabase-js';
+import { useUser } from '@/lib/useUser';
 
 export default function Navbar() {
   const pathname = usePathname();
   const { lang, t, setLang } = useLanguage();
+  const { displayName, initials, email } = useUser();
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const [user, setUser] = useState<SupabaseUser | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    const supabase = createClient();
-
-    // Get initial user
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
-    });
-
-    // Listen to auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const fullName = user?.user_metadata?.full_name as string | undefined;
-  const email = user?.email ?? '';
-
-  const initials = mounted && fullName
-    ? fullName.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase()
-    : mounted && email
-    ? email.slice(0, 2).toUpperCase()
-    : '';
-
-  const displayName = mounted && fullName
-    ? fullName.split(' ').slice(0, 2).join(' ')
-    : mounted && email
-    ? email.split('@')[0]
-    : '';
 
   const handleLogout = async () => {
     setIsLoggingOut(true);

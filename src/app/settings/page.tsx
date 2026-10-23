@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   User,
@@ -23,21 +23,38 @@ import {
   FileText,
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
-import { mockUser } from '@/lib/mock-data';
+import { useUser } from '@/lib/useUser';
 import { useLanguage } from '@/lib/LanguageContext';
 
 export default function SettingsPage() {
   const { lang, setLang } = useLanguage();
+  const { displayName, email, university, major, initials, loading, updateProfile } = useUser();
   const [activeTab, setActiveTab] = useState<'account' | 'learning' | 'notifications' | 'security'>('account');
   const [profileData, setProfileData] = useState({
-    fullName: mockUser.full_name,
-    email: 'keishamanik@gmail.com',
-    studentId: 'PU123456',
-    phone: '+62 812 3456 7890',
-    institution: 'President University',
-    major: 'Corporate Lawyer',
+    fullName: '',
+    email: '',
+    studentId: '',
+    phone: '',
+    institution: '',
+    major: '',
   });
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Pre-fill form once user data loads
+  useEffect(() => {
+    if (!loading) {
+      setProfileData((prev) => ({
+        ...prev,
+        fullName: displayName || '',
+        email: email || '',
+        institution: university || '',
+        major: major || '',
+      }));
+    }
+  }, [loading, displayName, email, university, major]);
+
 
   // Learning preferences
   const [learningPace, setLearningPace] = useState<'slow' | 'moderate' | 'fast'>('moderate');
@@ -52,10 +69,25 @@ export default function SettingsPage() {
     marketing: false,
   });
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 3000);
+    setSaving(true);
+    setSaveError(null);
+
+    const { error } = await updateProfile({
+      full_name: profileData.fullName,
+      university: profileData.institution,
+      major: profileData.major,
+    });
+
+    setSaving(false);
+
+    if (error) {
+      setSaveError(error.message || 'Gagal menyimpan perubahan profil');
+    } else {
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 3500);
+    }
   };
 
   const toggleNotification = (key: keyof typeof notifications) => {
@@ -209,7 +241,9 @@ export default function SettingsPage() {
             <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#7a1c1c] via-[#8c2222] to-[#5a1414] text-white p-6 shadow-md">
               <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <div className="relative w-16 h-16 rounded-full bg-[#d4af37]/20 border-2 border-[#d4af37]/60 flex items-center justify-center shrink-0">
-                  <span className="text-[#d4af37] font-serif font-bold text-xl">KM</span>
+                  <span className="text-[#d4af37] font-serif font-bold text-xl">
+                    {loading ? '…' : initials}
+                  </span>
                   <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-white text-gray-700 flex items-center justify-center shadow-xs">
                     <Camera size={12} />
                   </div>
@@ -220,7 +254,7 @@ export default function SettingsPage() {
                     ACCOUNT SETTINGS
                   </p>
                   <h1 className="text-xl md:text-2xl font-serif font-bold text-white">
-                    Hello, Keisha Stephany Manik
+                    {loading ? 'Hello…' : `Hello, ${displayName}`}
                   </h1>
                   <p className="text-xs text-white/80">
                     Manage your profile, preferences, and account security from here.
@@ -244,7 +278,9 @@ export default function SettingsPage() {
               {/* Avatar Row */}
               <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
                 <div className="w-16 h-16 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center relative">
-                  <span className="font-serif font-bold text-gray-700 text-lg">KM</span>
+                  <span className="font-serif font-bold text-gray-700 text-lg">
+                    {loading ? '…' : initials}
+                  </span>
                 </div>
                 <div>
                   <button
@@ -260,7 +296,13 @@ export default function SettingsPage() {
               {savedSuccess && (
                 <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs flex items-center gap-2">
                   <Check size={16} className="text-emerald-600 shrink-0" />
-                  <span>Profile changes saved successfully!</span>
+                  <span>Profil berhasil diperbarui dan tersimpan!</span>
+                </div>
+              )}
+
+              {saveError && (
+                <div className="p-3 bg-red-50 border border-red-200 text-red-800 rounded-xl text-xs flex items-center gap-2">
+                  <span>{saveError}</span>
                 </div>
               )}
 
@@ -284,9 +326,10 @@ export default function SettingsPage() {
                     <input
                       type="email"
                       value={profileData.email}
-                      onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-gray-50/60 rounded-xl border border-gray-200 text-xs focus:bg-white focus:outline-hidden focus:border-[#7a1c1c]"
+                      disabled
+                      className="w-full px-3.5 py-2.5 bg-gray-100 rounded-xl border border-gray-200 text-xs text-gray-500 cursor-not-allowed"
                     />
+                    <p className="text-[10px] text-gray-400">Email terikat dengan akun Supabase</p>
                   </div>
 
                   <div className="space-y-1">
@@ -314,42 +357,58 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-gray-700">Institution</label>
-                    <select
+                    <label className="text-xs font-semibold text-gray-700">Institution / University</label>
+                    <input
+                      type="text"
+                      list="universities-list"
+                      placeholder="e.g. Universitas Indonesia"
                       value={profileData.institution}
                       onChange={(e) =>
                         setProfileData({ ...profileData, institution: e.target.value })
                       }
                       className="w-full px-3.5 py-2.5 bg-gray-50/60 rounded-xl border border-gray-200 text-xs focus:bg-white focus:outline-hidden focus:border-[#7a1c1c]"
-                    >
-                      <option value="President University">President University</option>
-                      <option value="Universitas Indonesia">Universitas Indonesia</option>
-                      <option value="Universitas Gadjah Mada">Universitas Gadjah Mada</option>
-                      <option value="Universitas Airlangga">Universitas Airlangga</option>
-                    </select>
+                    />
+                    <datalist id="universities-list">
+                      <option value="Universitas Indonesia" />
+                      <option value="Universitas Gadjah Mada" />
+                      <option value="Universitas Padjadjaran" />
+                      <option value="Universitas Diponegoro" />
+                      <option value="Universitas Airlangga" />
+                      <option value="President University" />
+                      <option value="Universitas Brawijaya" />
+                      <option value="Universitas Trisakti" />
+                    </datalist>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-gray-700">Major</label>
-                    <select
+                    <label className="text-xs font-semibold text-gray-700">Program / Major</label>
+                    <input
+                      type="text"
+                      list="majors-list"
+                      placeholder="e.g. Ilmu Hukum, Corporate Lawyer"
                       value={profileData.major}
                       onChange={(e) => setProfileData({ ...profileData, major: e.target.value })}
                       className="w-full px-3.5 py-2.5 bg-gray-50/60 rounded-xl border border-gray-200 text-xs focus:bg-white focus:outline-hidden focus:border-[#7a1c1c]"
-                    >
-                      <option value="Corporate Lawyer">Corporate Lawyer</option>
-                      <option value="Criminal Law">Criminal Law</option>
-                      <option value="Constitutional Law">Constitutional Law</option>
-                      <option value="International Law">International Law</option>
-                    </select>
+                    />
+                    <datalist id="majors-list">
+                      <option value="Ilmu Hukum" />
+                      <option value="Corporate Lawyer" />
+                      <option value="Criminal Law" />
+                      <option value="Constitutional Law" />
+                      <option value="International Law" />
+                      <option value="Civil Law" />
+                    </datalist>
                   </div>
                 </div>
 
                 <div className="pt-2">
                   <button
                     type="submit"
-                    className="px-6 py-2.5 bg-[#7a1c1c] hover:bg-[#661616] text-white rounded-xl text-xs font-semibold transition-colors shadow-xs cursor-pointer"
+                    disabled={saving}
+                    className="px-6 py-2.5 bg-[#7a1c1c] hover:bg-[#661616] disabled:opacity-50 text-white rounded-xl text-xs font-semibold transition-colors shadow-xs cursor-pointer flex items-center gap-2"
                   >
-                    Save Changes
+                    {saving && <span className="animate-spin inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full" />}
+                    <span>{saving ? 'Saving...' : 'Save Changes'}</span>
                   </button>
                 </div>
               </form>

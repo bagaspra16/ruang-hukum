@@ -15,7 +15,6 @@ import {
   Calendar,
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
-import { mockUser } from '@/lib/mock-data';
 import { useLanguage } from '@/lib/LanguageContext';
 
 export default function SubscriptionPage() {

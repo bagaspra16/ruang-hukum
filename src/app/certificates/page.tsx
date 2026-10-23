@@ -21,7 +21,7 @@ import {
   Users,
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
-import { mockUser } from '@/lib/mock-data';
+import { useUser } from '@/lib/useUser';
 import { useLanguage } from '@/lib/LanguageContext';
 import { moduleContent } from '@/lib/mock-data-i18n';
 import { Lang } from '@/lib/translations';
@@ -110,6 +110,7 @@ const achievementsByLang: Record<Lang, Array<{
 
 export default function CertificatesPage() {
   const { lang, t } = useLanguage();
+  const { displayName } = useUser();
   const [activeTab, setActiveTab] = useState<'certificates' | 'achievements'>('certificates');
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
@@ -370,7 +371,7 @@ export default function CertificatesPage() {
                         <div className="py-2">
                           <p className="text-[8px] text-gray-400">{copy.certCertifies}</p>
                           <p className="font-serif font-bold italic text-gray-900 text-xs mt-0.5">
-                            {mockUser.full_name}
+                            {displayName || 'Pelajar Ruang Hukum'}
                           </p>
                           <p className="text-[8px] text-gray-500 mt-0.5">
                             {copy.certCompleted}
